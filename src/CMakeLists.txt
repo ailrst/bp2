@@ -27,10 +27,5 @@ add_custom_command(
          COMMENT "Symlinking shaders" VERBATIM
 )
 
-add_custom_target(copy_assets
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/copy-assets.cmake
-)
-
-add_dependencies(testgame copy_assets)
 
 

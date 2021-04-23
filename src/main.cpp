@@ -85,6 +85,14 @@ void printProgramLog( GLuint program )
 }
 
 
+void set_camera(Shader *shader, glm::vec3 pos, glm::vec3 lookat, float zoom) {
+    shader->setVec3("gcam.pos", pos);
+
+    shader->setVec3("gcam.lookat", lookat);
+
+    shader->setFloat("gcam.zoom", zoom);
+};
+
 class SDLGLGLWindow {
 
     public:
@@ -217,7 +225,20 @@ class SDLGLGLWindow {
         return true;
     }
 
-    
+    void update_camera() {
+        if (cam_pitch > 89.0f) 
+            cam_pitch = 89.0f;
+        if (cam_pitch < -89.0f) 
+            cam_pitch = -89.0f;
+
+        camera_direction.x = cos(glm::radians(cam_yaw)) * cos(glm::radians(cam_pitch));
+        camera_direction.y = sin(glm::radians(cam_pitch));
+        camera_direction.z = sin(glm::radians(cam_yaw)) * cos(glm::radians(cam_pitch));
+        camera_front = glm::normalize(camera_direction);
+
+        // update shader
+        set_camera(shader, camera_pos, camera_front, 1.0);
+    }
 
     void render()
     {
@@ -244,7 +265,6 @@ class SDLGLGLWindow {
 
         swap_window();
     }
-
 
     void 
     swap_window() 
@@ -285,6 +305,7 @@ int main(int argc, char **argv) {
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glCheckError();
+    
 
     //While application is running
     while( !quit )
@@ -298,7 +319,7 @@ int main(int argc, char **argv) {
                 quit = true;
             }
             if (e.type == SDL_KEYDOWN) {
-                const float camera_speed = 0.4f;
+                const float camera_speed = 0.11f;
                 switch (e.key.keysym.scancode) {
                     case SDL_SCANCODE_SPACE:
                         mouse_mode = !mouse_mode;
@@ -322,6 +343,12 @@ int main(int argc, char **argv) {
                         break;
                 }
             } if (e.type == SDL_MOUSEMOTION) {
+
+                if (mouse_mode) {
+                    cont.cam_pitch -= e.motion.yrel * 0.1f;
+                    cont.cam_yaw += e.motion.xrel * 0.1f;
+                    cont.update_camera();
+                }
 
                 static bool first = true;
                 if (first) {
